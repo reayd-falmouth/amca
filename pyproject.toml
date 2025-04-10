@@ -9,8 +9,8 @@ readme = "README.md"
 python = ">=3.10,<3.14"
 numpy = "1.24.4"
 gym = "0.26.2"
-stable-baselines3 = "2.2.1"  # add this
-torch = "2.2.1"
+stable-baselines3 = {extras = ["extra"], version = "^2.6.0"}  # add this
+torch = "2.3.0"
 matplotlib = "^3.10.1"
 
 [build-system]

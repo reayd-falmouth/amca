@@ -14,10 +14,14 @@
 
 import argparse
 
-import gym
+import gymnasium as gym
+from gymnasium.envs.registration import register
 from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC
 
-import amca
+register(
+    id="BackgammonHumanEnv-v0",
+    entry_point="amca.envs.backgammon_envs:BackgammonHumanEnv"
+)
 
 if __name__ == "__main__":
     PARSER = argparse.ArgumentParser(description='Train an agent using RL')

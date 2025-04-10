@@ -41,7 +41,12 @@ class SarsaGame:
         return self.__w_player if color == 'w' else self.__b_player
 
     def roll_dice(self):
-        self.__dice = [random.randint(1, 6), random.randint(1, 6)]
+        d1 = random.randint(1, 6)
+        d2 = random.randint(1, 6)
+        if d1 == d2:
+            self.__dice = [d1] * 4
+        else:
+            self.__dice = [d1, d2]
 
     def get_dice(self, diceid):
         return self.__dice[diceid]

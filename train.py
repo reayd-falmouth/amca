@@ -14,29 +14,52 @@
     training process, showing mean reward vs. timesteps.
 """
 
-# Standard imports
-import os
 import argparse
+import os
 
-# Scientific Python imports
-import numpy as np
+import gymnasium as gym
 import matplotlib.pyplot as plt
-
-# Reinforcement Learning imports
-import gym
+import numpy as np
+from gymnasium.envs.registration import register
 from stable_baselines3 import A2C, DDPG, DQN, SAC, PPO
+from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.results_plotter import load_results, ts2xy
 from stable_baselines3.common.utils import set_random_seed
-# from stable_baselines3.common.policies import MlpPolicy, MlpLstmPolicy, MlpLnLstmPolicy, CnnPolicy, CnnLstmPolicy, CnnLnLstmPolicy
-from stable_baselines3.ppo import MlpPolicy, CnnPolicy
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines3.ddpg import policies as ddpg_policies
-from stable_baselines3.deepq import policies as dqn_policies
-from stable_baselines3.results_plotter import load_results, ts2xy
+from stable_baselines3.dqn import policies as dqn_policies
+from stable_baselines3.ppo import MlpPolicy, CnnPolicy
 from stable_baselines3.sac import policies as sac_policies
 
-# Amca imports
-import amca
+# Manually register custom environments
+register(
+    id="BackgammonRandomEnv-v0",
+    entry_point="amca.envs.backgammon_envs:BackgammonRandomEnv",
+)
+
+register(
+    id="BackgammonRandomContinuousEnv-v0",
+    entry_point="amca.envs.backgammon_envs:BackgammonRandomContinuousEnv",
+)
+
+
+class EpisodeLimitCallback(BaseCallback):
+    def __init__(self, max_episodes, verbose=0):
+        super().__init__(verbose)
+        self.max_episodes = max_episodes
+        self.episode_count = 0
+
+    def _on_step(self) -> bool:
+        infos = self.locals.get("infos", [])
+        for info in infos:
+            if "episode" in info:
+                self.episode_count += 1
+                if self.episode_count >= self.max_episodes:
+                    if self.verbose:
+                        print(f"Stopping at {self.episode_count} episodes.")
+                    return False
+        return True
 
 
 def make_env(env_id, algorithm, rank, seed=0):
@@ -94,11 +117,11 @@ if __name__ == "__main__":
     PARSER = argparse.ArgumentParser(description='Train an agent using RL')
     PARSER.add_argument('--name', '-n',
                         help='Path to the the model to be trained.',
-                        default='amca/models/new_model.pkl',
+                        default='amca/models/default',
                         type=str)
     PARSER.add_argument('--cont', '-c',
                         help='Path to the model to continue training.',
-                        default='None',
+                        default=None,
                         type=str)
     PARSER.add_argument('--log_directory', '-l',
                         help='Directory to store log files.',
@@ -115,6 +138,8 @@ if __name__ == "__main__":
                         help='Number of timesteps to train.',
                         default=100000,
                         type=int)
+    PARSER.add_argument('--episodes', '-e', default=100, type=int,
+                        help='Optional: number of episodes instead of timesteps')
     PARSER.add_argument('--multiprocess', '-m',
                         help='How many multiprocesses to use.',
                         default=1,
@@ -140,41 +165,41 @@ if __name__ == "__main__":
         algorithm = DDPG
         MlpPolicy = ddpg_policies.MlpPolicy
         CnnPolicy = ddpg_policies.CnnPolicy
-        LnMlpPolicy = ddpg_policies.LnMlpPolicy
-        LnCnnPolicy = ddpg_policies.LnCnnPolicy
+        # LnMlpPolicy = ddpg_policies.LnMlpPolicy
+        # LnCnnPolicy = ddpg_policies.LnCnnPolicy
     elif ARGS.algorithm.lower() == 'dqn':
         algorithm = DQN
         MlpPolicy = dqn_policies.MlpPolicy
         CnnPolicy = dqn_policies.CnnPolicy
-        LnMlpPolicy = dqn_policies.LnMlpPolicy
-        LnCnnPolicy = dqn_policies.LnCnnPolicy
+        # LnMlpPolicy = dqn_policies.LnMlpPolicy
+        # LnCnnPolicy = dqn_policies.LnCnnPolicy
     elif ARGS.algorithm.lower() == 'ppo':
         algorithm = PPO
     elif ARGS.algorithm.lower() == 'sac':
         algorithm = SAC
         MlpPolicy = sac_policies.MlpPolicy
         CnnPolicy = sac_policies.CnnPolicy
-        LnMlpPolicy = sac_policies.LnMlpPolicy
-        LnCnnPolicy = sac_policies.LnCnnPolicy
+        # LnMlpPolicy = sac_policies.LnMlpPolicy
+        # LnCnnPolicy = sac_policies.LnCnnPolicy
     else:
         raise ValueError('Unidentified algorithm chosen')
 
     if ARGS.policy.lower() == 'mlp':
         policy = MlpPolicy
-    elif ARGS.policy.lower() == 'lnmlp':
-        policy = LnMlpPolicy
-    elif ARGS.policy.lower() == 'mlplstm':
-        policy = MlpLstmPolicy
-    elif ARGS.policy.lower() == 'mlplnlstm':
-        policy = MlpLnLstmPolicy
+    # elif ARGS.policy.lower() == 'lnmlp':
+    #     policy = LnMlpPolicy
+    # elif ARGS.policy.lower() == 'mlplstm':
+    #     policy = MlpLstmPolicy
+    # elif ARGS.policy.lower() == 'mlplnlstm':
+    #     policy = MlpLnLstmPolicy
     elif ARGS.policy.lower() == 'cnn':
         policy = CnnPolicy
-    elif ARGS.policy.lower() == 'lncnn':
-        policy = LnCnnPolicy
-    elif ARGS.policy.lower() == 'cnnlstm':
-        policy = CnnLstmPolicy
-    elif ARGS.policy.lower() == 'cnnlnlstm':
-        policy = CnnLnLstmPolicy
+    # elif ARGS.policy.lower() == 'lncnn':
+    #     policy = LnCnnPolicy
+    # elif ARGS.policy.lower() == 'cnnlstm':
+    #     policy = CnnLstmPolicy
+    # elif ARGS.policy.lower() == 'cnnlnlstm':
+    #     policy = CnnLnLstmPolicy
     else:
         raise ValueError('Unidentified policy chosen')
 
@@ -192,11 +217,20 @@ if __name__ == "__main__":
         env = Monitor(env, ARGS.log_directory, allow_early_resets=True)
         env = DummyVecEnv([lambda: env])
 
-    if ARGS.cont == 'None':
+    if ARGS.cont is None:
         model = algorithm(policy, env, verbose=ARGS.verbose)
     else:
         model = algorithm.load(ARGS.cont, verbose=ARGS.verbose)
         model.set_env(env)
+
+    if ARGS.episodes > 0:
+        avg_steps_per_episode = 110
+        total_timesteps = ARGS.episodes * avg_steps_per_episode
+        callback = EpisodeLimitCallback(max_episodes=ARGS.episodes)
+        model.learn(total_timesteps=total_timesteps, callback=callback)
+    else:
+        timesteps = ARGS.timesteps
+        model.learn(total_timesteps=timesteps)
 
     model.learn(total_timesteps=ARGS.timesteps)
     model.save('{}'.format(ARGS.name))

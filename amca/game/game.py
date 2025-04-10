@@ -20,7 +20,7 @@ from amca.game.board import Board
 
 
 def roll_dice():
-    dice = [np.random.randint(1, 6), np.random.randint(1, 6)]
+    dice = [np.random.randint(1, 7), np.random.randint(1, 7)]
     if dice[0] == dice[1]:
         return [dice[0], ]*4
     return dice
@@ -70,15 +70,16 @@ class Game:
         self.__opponent = player2
         self.__dice = []
 
-        # The higher dice roll starts
-        w_toss = roll_dice()
-        b_toss = roll_dice()
-        while sum(w_toss) == sum(b_toss):
-            w_toss = roll_dice()
-            b_toss = roll_dice()
-
+        # Opening roll
         self.__dice = roll_dice()
-        if sum(w_toss) > sum(b_toss):
+        while self.__dice[0] == self.__dice[1]:
+            self.__dice = roll_dice()
+
+        w_toss = self.__dice[0]
+        b_toss = self.__dice[1]
+
+        # The higher dice roll starts
+        if w_toss > b_toss:
             self.__turn = 1
         else:
             self.__turn = 2

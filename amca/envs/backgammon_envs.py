@@ -13,14 +13,16 @@
 """
 
 import time
+from typing import Any, TypeVar
 
-import gym
-from gym import spaces
+import gymnasium as gym
 import numpy as np
+from gymnasium import spaces
 
-from amca.game import Game, ALL_ACTIONS
 from amca.agents import RandomAgent, PolicyAgent, HumanAgent
+from amca.game import Game, ALL_ACTIONS
 
+ObsType = TypeVar("ObsType")
 
 class BackgammonEnv(gym.Env):
     """
@@ -49,7 +51,7 @@ class BackgammonEnv(gym.Env):
          point24 count]
     """
 
-    metadata = {'render.modes': ['human']}
+    metadata = {'render_modes': ['human']}
 
     def __init__(self, opponent, cont=False):
         # Action and observation spaces.
@@ -81,12 +83,17 @@ class BackgammonEnv(gym.Env):
         if mode == 'human':
             self.__game.print_game()
 
-    def reset(self):
+    def reset(
+            self,
+            *,
+            seed: int | None = None,
+            options: dict[str, Any] | None = None,
+    ) -> tuple[ObsType, dict[str, Any]]:
         """Restarts the game."""
 
         self.__game = Game(self, self.__opponent)
 
-        return self.__game.get_observation()
+        return self.__game.get_observation(), {}
 
     def step(self, actionint):
         """Run one timestep of the environment's dynamics. When end of
@@ -112,10 +119,11 @@ class BackgammonEnv(gym.Env):
         observation = self.__game.get_observation()
         done = self.__game.get_done()
         info = self.get_info()
-        if done:
-            self.reset()
 
-        return (observation, reward, done, info)
+        terminated = done
+        truncated = False  # You could make this configurable if needed
+
+        return observation, reward, terminated, truncated, info
 
     def get_info(self):
         """Returns useful info for debugging, etc."""
@@ -135,7 +143,7 @@ class BackgammonRandomEnv(BackgammonEnv):
 
 
 class BackgammonPolicyEnv(BackgammonEnv):
-    def __init__(self, opponent=PolicyAgent('ppo', 'amca/models/amca.pkl')):
+    def __init__(self, opponent=PolicyAgent('ppo', 'amca/models/amca.zip')):
         super().__init__(opponent)
 
 
@@ -150,5 +158,5 @@ class BackgammonPolicyContinuousEnv(BackgammonEnv):
 
 
 class BackgammonRandomContinuousEnv(BackgammonEnv):
-    def __init__(self, opponent=PolicyAgent('ppo', 'amca/models/amca.pkl')):
+    def __init__(self, opponent=PolicyAgent('ppo', 'amca/models/amca.zip')):
         super().__init__(opponent, cont=True)
