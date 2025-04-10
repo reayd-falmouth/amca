@@ -13,7 +13,7 @@
 """
 
 import argparse
-
+import numpy as np
 import gymnasium as gym
 from gymnasium.envs.registration import register
 from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC
@@ -31,7 +31,7 @@ if __name__ == "__main__":
                         type=str)
     PARSER.add_argument('--model', '-m',
                         help='Path to model',
-                        default='amca/models/amca.pkl',
+                        default='amca/models/default',
                         type=str)
 
     ARGS = PARSER.parse_args()
@@ -55,10 +55,14 @@ if __name__ == "__main__":
         env = gym.make('BackgammonHumanEnv-v0')
     model = algorithm.load(ARGS.model)
 
-    obs = env.reset()
+    obs, _ = env.reset()
+    obs = np.array(obs)  # Convert to numpy array
+
     while True:
         action, _ = model.predict(obs)
-        obs, _, dones, _ = env.step(action)
+        obs, _, dones, _, _ = env.step(action)
+        obs = np.array(obs)  # Again, ensure it's a NumPy array
+
         env.render()
         if dones:
             print('Done!')

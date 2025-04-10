@@ -51,7 +51,7 @@ class BackgammonEnv(gym.Env):
          point24 count]
     """
 
-    metadata = {'render_modes': ['human']}
+    metadata = {'render_modes': ['human'], 'render_fps': 4}
 
     def __init__(self, opponent, cont=False):
         # Action and observation spaces.
@@ -93,7 +93,7 @@ class BackgammonEnv(gym.Env):
 
         self.__game = Game(self, self.__opponent)
 
-        return self.__game.get_observation(), {}
+        return np.array(self.__game.get_observation(), dtype=np.float32), {}
 
     def step(self, actionint):
         """Run one timestep of the environment's dynamics. When end of
@@ -123,7 +123,7 @@ class BackgammonEnv(gym.Env):
         terminated = done
         truncated = False  # You could make this configurable if needed
 
-        return observation, reward, terminated, truncated, info
+        return np.array(observation, dtype=np.float32), reward, terminated, truncated, info
 
     def get_info(self):
         """Returns useful info for debugging, etc."""

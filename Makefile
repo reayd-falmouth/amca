@@ -1,4 +1,4 @@
-NUM := 10
+NUM := 5000
 
 # Check-in code after formatting
 checkin: ## Perform a check-in after formatting the code
@@ -10,7 +10,7 @@ checkin: ## Perform a check-in after formatting the code
 	  git push
 
 play_rl:
-	@poetry run python play.py
+	@poetry run python play.py $(ARGS)
 
 play_sarsa:
 	@poetry run python sarsa_play.py

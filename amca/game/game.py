@@ -26,6 +26,15 @@ def roll_dice():
     return dice
 
 
+def opening_roll():
+    """Roll two different dice for the opening move (no doubles)."""
+    while True:
+        d1 = np.random.randint(1, 7)
+        d2 = np.random.randint(1, 7)
+        if d1 != d2:
+            return [d1, d2]
+
+
 def all_possible_actions():
     actions = []
     sources = list(range(0, 24))
@@ -70,19 +79,17 @@ class Game:
         self.__opponent = player2
         self.__dice = []
 
-        # Opening roll
-        self.__dice = roll_dice()
-        while self.__dice[0] == self.__dice[1]:
-            self.__dice = roll_dice()
+        # Corrected Opening Roll
+        opening_dice = opening_roll()
+        w_toss, b_toss = opening_dice
 
-        w_toss = self.__dice[0]
-        b_toss = self.__dice[1]
-
-        # The higher dice roll starts
+        # Determine who goes first
         if w_toss > b_toss:
             self.__turn = 1
+            self.__dice = [w_toss, b_toss]  # Use original roll
         else:
             self.__turn = 2
+            self.__dice = [b_toss, w_toss]  # Use original roll
             self.opponent_turn()
 
     def player_turn(self, actionint):
@@ -131,7 +138,9 @@ class Game:
     def opponent_turn(self):
         """Manages the whole turn for the opponent."""
 
-        self.__dice = roll_dice()
+        if not self.__dice:  # Only roll if dice not set
+            self.__dice = roll_dice()
+
         while self.__dice:
             if self.get_done():
                 break
