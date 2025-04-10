@@ -24,15 +24,16 @@ import matplotlib.pyplot as plt
 
 # Reinforcement Learning imports
 import gym
-from stable_baselines import A2C, ACER, ACKTR, DDPG, DQN, GAIL, PPO2, TRPO, SAC
-from stable_baselines.bench import Monitor
-from stable_baselines.common import set_global_seeds
-from stable_baselines.common.policies import MlpPolicy, MlpLstmPolicy, MlpLnLstmPolicy, CnnPolicy, CnnLstmPolicy, CnnLnLstmPolicy
-from stable_baselines.common.vec_env import DummyVecEnv, SubprocVecEnv
-from stable_baselines.ddpg import policies as ddpg_policies
-from stable_baselines.deepq import policies as dqn_policies
-from stable_baselines.results_plotter import load_results, ts2xy
-from stable_baselines.sac import policies as sac_policies
+from stable_baselines3 import A2C, DDPG, DQN, SAC, PPO
+from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.utils import set_random_seed
+# from stable_baselines3.common.policies import MlpPolicy, MlpLstmPolicy, MlpLnLstmPolicy, CnnPolicy, CnnLstmPolicy, CnnLnLstmPolicy
+from stable_baselines3.ppo import MlpPolicy, CnnPolicy
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+from stable_baselines3.ddpg import policies as ddpg_policies
+from stable_baselines3.deepq import policies as dqn_policies
+from stable_baselines3.results_plotter import load_results, ts2xy
+from stable_baselines3.sac import policies as sac_policies
 
 # Amca imports
 import amca
@@ -55,7 +56,7 @@ def make_env(env_id, algorithm, rank, seed=0):
         os.makedirs(ARGS.log_directory, exist_ok=True)
         env = Monitor(env, ARGS.log_directory, allow_early_resets=True)
         return env
-    set_global_seeds(seed)
+    set_random_seed(seed)
     return _init
 
 
@@ -135,10 +136,6 @@ if __name__ == "__main__":
 
     if ARGS.algorithm.lower() == 'a2c':
         algorithm = A2C
-    elif ARGS.algorithm.lower() == 'acer':
-        algorithm = ACER
-    elif ARGS.algorithm.lower() == 'acktr':
-        algorithm = ACKTR
     elif ARGS.algorithm.lower() == 'ddpg':
         algorithm = DDPG
         MlpPolicy = ddpg_policies.MlpPolicy
@@ -151,18 +148,14 @@ if __name__ == "__main__":
         CnnPolicy = dqn_policies.CnnPolicy
         LnMlpPolicy = dqn_policies.LnMlpPolicy
         LnCnnPolicy = dqn_policies.LnCnnPolicy
-    elif ARGS.algorithm.lower() == 'gail':
-        algorithm = GAIL
     elif ARGS.algorithm.lower() == 'ppo':
-        algorithm = PPO2
+        algorithm = PPO
     elif ARGS.algorithm.lower() == 'sac':
         algorithm = SAC
         MlpPolicy = sac_policies.MlpPolicy
         CnnPolicy = sac_policies.CnnPolicy
         LnMlpPolicy = sac_policies.LnMlpPolicy
         LnCnnPolicy = sac_policies.LnCnnPolicy
-    elif ARGS.algorithm.lower() == 'trpo':
-        algorithm = TRPO
     else:
         raise ValueError('Unidentified algorithm chosen')
 
@@ -185,7 +178,7 @@ if __name__ == "__main__":
     else:
         raise ValueError('Unidentified policy chosen')
 
-    if algorithm in [DDPG, GAIL, SAC]:
+    if algorithm in [DDPG, SAC]:
         env_id = 'BackgammonRandomContinuousEnv-v0'
     else:
         env_id = 'BackgammonRandomEnv-v0'

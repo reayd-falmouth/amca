@@ -15,7 +15,7 @@
 import argparse
 
 import gym
-from stable_baselines import A2C, ACER, ACKTR, DDPG, DQN, GAIL, PPO2, TRPO, SAC
+from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC
 
 import amca
 
@@ -34,26 +34,18 @@ if __name__ == "__main__":
 
     if ARGS.algorithm.lower() == 'a2c':
         algorithm = A2C
-    elif ARGS.algorithm.lower() == 'acer':
-        algorithm = ACER
-    elif ARGS.algorithm.lower() == 'acktr':
-        algorithm = ACKTR
     elif ARGS.algorithm.lower() == 'ddpg':
         algorithm = DDPG
     elif ARGS.algorithm.lower() == 'dqn':
         algorithm = DQN
-    elif ARGS.algorithm.lower() == 'gail':
-        algorithm = GAIL
     elif ARGS.algorithm.lower() == 'ppo':
-        algorithm = PPO2
+        algorithm = PPO
     elif ARGS.algorithm.lower() == 'sac':
         algorithm = SAC
-    elif ARGS.algorithm.lower() == 'trpo':
-        algorithm = TRPO
     else:
-        raise ValueError('Unidentified algorithm chosen')
+        raise ValueError(f"Unsupported algorithm: {ARGS.algorithm}")
 
-    if algorithm in [DDPG, GAIL, SAC]:
+    if algorithm in [DDPG, SAC]:
         env = gym.make('BackgammonHumanContinuousEnv-v0')
     else:
         env = gym.make('BackgammonHumanEnv-v0')

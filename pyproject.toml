@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "amca"
+version = "0.1.0"
+description = ""
+authors = ["reayd-falmouth <dr323090@falmouth.ac.uk>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.14"
+numpy = "1.24.4"
+gym = "0.26.2"
+stable-baselines3 = "2.2.1"  # add this
+torch = "2.2.1"
+matplotlib = "^3.10.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
