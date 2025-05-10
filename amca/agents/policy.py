@@ -12,33 +12,30 @@
     The Policy agent takes an action according to a DNN.
 """
 
-from stable_baselines import A2C, ACER, ACKTR, DDPG, DQN, GAIL, PPO2, TRPO, SAC
+import os
+
+from stable_baselines3 import A2C, DDPG, DQN, SAC, PPO
 
 
 class PolicyAgent:
     def __init__(self, algorithm, model):
         if algorithm.lower() == 'a2c':
-            algorithm = A2C
-        elif algorithm.lower() == 'acer':
-            algorithm = ACER
-        elif algorithm.lower() == 'acktr':
-            algorithm = ACKTR
+            self.algorithm_class = A2C
         elif algorithm.lower() == 'ddpg':
-            algorithm = DDPG
+            self.algorithm_class = DDPG
         elif algorithm.lower() == 'dqn':
-            algorithm = DQN
-        elif algorithm.lower() == 'gail':
-            algorithm = GAIL
+            self.algorithm_class = DQN
         elif algorithm.lower() == 'ppo':
-            algorithm = PPO2
+            self.algorithm_class = PPO
         elif algorithm.lower() == 'sac':
-            algorithm = SAC
-        elif algorithm.lower() == 'trpo':
-            algorithm = TRPO
+            self.algorithm_class = SAC
         else:
             raise ValueError('Unidentified algorithm chosen')
 
-        self.__policy = algorithm.load(model)
+        if not os.path.exists(model):
+            self.__policy = None
+        else:
+            self.__policy = self.algorithm_class.load(model)
 
     def make_decision(self, observation):
         """Returns the action according to the policy and observation."""

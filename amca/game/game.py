@@ -20,10 +20,19 @@ from amca.game.board import Board
 
 
 def roll_dice():
-    dice = [np.random.randint(1, 6), np.random.randint(1, 6)]
+    dice = [np.random.randint(1, 7), np.random.randint(1, 7)]
     if dice[0] == dice[1]:
         return [dice[0], ]*4
     return dice
+
+
+def opening_roll():
+    """Roll two different dice for the opening move (no doubles)."""
+    while True:
+        d1 = np.random.randint(1, 7)
+        d2 = np.random.randint(1, 7)
+        if d1 != d2:
+            return [d1, d2]
 
 
 def all_possible_actions():
@@ -70,18 +79,17 @@ class Game:
         self.__opponent = player2
         self.__dice = []
 
-        # The higher dice roll starts
-        w_toss = roll_dice()
-        b_toss = roll_dice()
-        while sum(w_toss) == sum(b_toss):
-            w_toss = roll_dice()
-            b_toss = roll_dice()
+        # Corrected Opening Roll
+        opening_dice = opening_roll()
+        w_toss, b_toss = opening_dice
 
-        self.__dice = roll_dice()
-        if sum(w_toss) > sum(b_toss):
+        # Determine who goes first
+        if w_toss > b_toss:
             self.__turn = 1
+            self.__dice = [w_toss, b_toss]  # Use original roll
         else:
             self.__turn = 2
+            self.__dice = [b_toss, w_toss]  # Use original roll
             self.opponent_turn()
 
     def player_turn(self, actionint):
@@ -130,7 +138,9 @@ class Game:
     def opponent_turn(self):
         """Manages the whole turn for the opponent."""
 
-        self.__dice = roll_dice()
+        if not self.__dice:  # Only roll if dice not set
+            self.__dice = roll_dice()
+
         while self.__dice:
             if self.get_done():
                 break

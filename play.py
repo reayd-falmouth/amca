@@ -13,11 +13,15 @@
 """
 
 import argparse
+import numpy as np
+import gymnasium as gym
+from gymnasium.envs.registration import register
+from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC
 
-import gym
-from stable_baselines import A2C, ACER, ACKTR, DDPG, DQN, GAIL, PPO2, TRPO, SAC
-
-import amca
+register(
+    id="BackgammonHumanEnv-v0",
+    entry_point="amca.envs.backgammon_envs:BackgammonHumanEnv"
+)
 
 if __name__ == "__main__":
     PARSER = argparse.ArgumentParser(description='Train an agent using RL')
@@ -27,42 +31,38 @@ if __name__ == "__main__":
                         type=str)
     PARSER.add_argument('--model', '-m',
                         help='Path to model',
-                        default='amca/models/amca.pkl',
+                        default='amca/models/default',
                         type=str)
 
     ARGS = PARSER.parse_args()
 
     if ARGS.algorithm.lower() == 'a2c':
         algorithm = A2C
-    elif ARGS.algorithm.lower() == 'acer':
-        algorithm = ACER
-    elif ARGS.algorithm.lower() == 'acktr':
-        algorithm = ACKTR
     elif ARGS.algorithm.lower() == 'ddpg':
         algorithm = DDPG
     elif ARGS.algorithm.lower() == 'dqn':
         algorithm = DQN
-    elif ARGS.algorithm.lower() == 'gail':
-        algorithm = GAIL
     elif ARGS.algorithm.lower() == 'ppo':
-        algorithm = PPO2
+        algorithm = PPO
     elif ARGS.algorithm.lower() == 'sac':
         algorithm = SAC
-    elif ARGS.algorithm.lower() == 'trpo':
-        algorithm = TRPO
     else:
-        raise ValueError('Unidentified algorithm chosen')
+        raise ValueError(f"Unsupported algorithm: {ARGS.algorithm}")
 
-    if algorithm in [DDPG, GAIL, SAC]:
+    if algorithm in [DDPG, SAC]:
         env = gym.make('BackgammonHumanContinuousEnv-v0')
     else:
         env = gym.make('BackgammonHumanEnv-v0')
     model = algorithm.load(ARGS.model)
 
-    obs = env.reset()
+    obs, _ = env.reset()
+    obs = np.array(obs)  # Convert to numpy array
+
     while True:
         action, _ = model.predict(obs)
-        obs, _, dones, _ = env.step(action)
+        obs, _, dones, _, _ = env.step(action)
+        obs = np.array(obs)  # Again, ensure it's a NumPy array
+
         env.render()
         if dones:
             print('Done!')
